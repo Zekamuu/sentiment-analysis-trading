@@ -56,7 +56,7 @@ notebooks/  results/
 ## Progress
 
 - [x] **Phase 0** — env, config, data loaders, repo structure
-- [ ] **Phase 1** — chronological split, leak-free scaler, backtest + baselines; random signal must break even
+- [x] **Phase 1** — chronological split, leak-free scaler, backtest + baselines; random signal break-even after costs (`check_phase1.py`)
 - [ ] Phase 2 — modeling table: lagged features + return target
 - [ ] Phase 3 — pre-build validation gate (target, leak-free, ADF, Granger)
 - [ ] Phase 4 — price-only ARIMAX (control)
