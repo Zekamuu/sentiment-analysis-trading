@@ -1,0 +1,24 @@
+[project]
+name = "crypto-sentiment"
+version = "0.1.0"
+description = "Crypto sentiment-driven trading signal — ARIMAX on returns, leak-free backtest"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    # numpy pinned <2 so pmdarima's compiled extensions stay ABI-compatible
+    "numpy>=1.24,<2.0",
+    "pandas>=2.0,<2.3",
+    "statsmodels>=0.14,<0.15",
+    "pmdarima>=2.0.4,<2.1",
+    "matplotlib>=3.7,<4.0",
+    "vaderSentiment>=3.3.2,<3.4",
+    "pyyaml>=6.0,<7.0",
+    "pyarrow>=15.0",          # parquet engine for the processed modeling table
+    "scipy>=1.11,<1.14",
+]
+
+# Optional GARCH volatility filter (stretch goal, Phase 7 / Design §4.9)
+[project.optional-dependencies]
+garch = ["arch>=6.3,<7.0"]
+
+[tool.uv]
+package = false

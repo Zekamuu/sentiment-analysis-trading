@@ -1,0 +1,26 @@
+# Crypto Sentiment Trading Signal — single source of truth for locked parameters.
+# Build Pathway Phase 0. Everything that defines the experiment lives here.
+
+# --- The three locked decisions (Phase 0, step 2) ---
+asset: BTC              # single asset for this project (Design §10)
+bar_frequency: "1D"     # pandas offset alias: daily bars
+holding_period_N: 1     # bars a trade stays open; N=1 => hold exactly one daily bar
+
+# --- Backtest / decision parameters (Design §5.3, §4.10) ---
+transaction_cost: 0.001 # fixed cost per trade as a fraction (0.1%); fee + spread assumption
+decision_threshold: 0.0 # |forecast return| must exceed this to trade; TUNED ON TRAIN ONLY later
+
+# --- Evaluation split (Phase 1, step 1) ---
+split:
+  train_frac: 0.70      # first 70% of time = train, last 30% = test. Never shuffle.
+
+# --- Reproducibility (Design §8) ---
+random_seed: 42
+timezone: "UTC"
+
+# --- Data paths ---
+data:
+  tweets_path: "Merged_Twitter_Data_IDsRemoved.csv"  # raw tweets (text, date, followers, engagement)
+  tweets_encoding: "latin-1"                          # file is not clean UTF-8
+  ohlcv_path: "data/raw/btc_ohlcv_daily.csv"          # YOU PROVIDE — see DATA_REQUIREMENTS.md
+  processed_path: "data/processed/modeling_table.parquet"  # built in Phase 2

@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# Data — do not commit large raw files (Design §4.1; pathway repo structure)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Large raw tweets dump kept out of git
+Merged_Twitter_Data_IDsRemoved.csv
+
+# Results artifacts are regenerable; keep the folder, ignore contents
+results/*
+!results/.gitkeep
+
+# Notebooks checkpoints
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
