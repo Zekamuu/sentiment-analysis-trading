@@ -42,7 +42,8 @@ def main() -> int:
     # 3. Tweets load into a UTC-indexed DataFrame.
     tpath = cfg["data"]["tweets_path"]
     if Path(tpath).exists():
-        tw = load_tweets(tpath, cfg["data"].get("tweets_encoding", "latin-1"))
+        tw = load_tweets(tpath, cfg["data"].get("tweets_encoding", "latin-1"),
+                         cfg["data"].get("tweets_columns"))
         utc = getattr(tw.index, "tz", None) is not None and str(tw.index.tz) == "UTC"
         tag = OK if utc else FAIL
         failures += 0 if utc else 1

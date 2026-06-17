@@ -22,5 +22,8 @@ timezone: "UTC"
 data:
   tweets_path: "Merged_Twitter_Data_IDsRemoved.csv"  # raw tweets (text, date, followers, engagement)
   tweets_encoding: "latin-1"                          # file is not clean UTF-8
+  # Optional: override auto-detected column names for a new tweets dataset, e.g.
+  # tweets_columns: {text: "Tweet", date: "created_at", followers: "user_followers"}
+  tweets_columns: null
   ohlcv_path: "data/raw/btc_ohlcv_daily.csv"          # YOU PROVIDE — see DATA_REQUIREMENTS.md
   processed_path: "data/processed/modeling_table.parquet"  # built in Phase 2
