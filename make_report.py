@@ -119,10 +119,51 @@ def main() -> None:
     # ---- Write REPORT.md ----------------------------------------------------
     md = _report_markdown(cfg, split, order, tbl, granger, price_da, sent_da,
                           price_res, sent_res, bnh)
+    md += _phase7_appendix()
     with open(REPORT, "w") as f:
         f.write(md)
     print(f"Wrote {REPORT}\n")
     print(tbl.to_string())
+
+
+def _phase7_appendix() -> str:
+    """Append the Phase 7 (LLM branch) section if its results exist."""
+    import os
+    if not os.path.exists("results/phase7_comparison.csv"):
+        return ""
+    p7 = pd.read_csv("results/phase7_comparison.csv").set_index("strategy")
+    comb, vader, price = p7.loc["combined_VADER+LLM"], p7.loc["vader_only"], p7.loc["price_only"]
+    return f"""
+
+---
+
+## Phase 7 (stretch) — LLM sentiment branch (CryptoBERT) fused with VADER
+
+We added the optional LLM branch: tokenize each post and score it with **CryptoBERT**
+(a crypto-social-media-tuned transformer), then fuse it with VADER by a
+**confidence-weighted** rule — `combined = conf·LLM + (1−conf)·VADER`, so confident
+LLM calls dominate and unsure ones defer to VADER. The fused score replaces the
+per-post sentiment; everything else (ARIMA order, threshold tuning, backtest) is
+unchanged from Phase 5.
+
+![Phase 7 cumulative net return](results/phase7_cumulative.png)
+
+{df_to_md(p7)}
+
+**This does NOT show the LLM "working".** The combined model posts the highest
+cumulative return ({comb['cumulative_net_return']:+.1%}), beating VADER-only
+({vader['cumulative_net_return']:+.1%}) and price-only ({price['cumulative_net_return']:+.1%}) —
+but its **directional accuracy is {comb['directional_acc']:.3f}, below a coin flip**, and it
+makes only **{int(comb['n_trades'])} trades**. The chart shows why: it sits flat (no-trade) for
+most of the window, then a couple of large trades during the early-February crash/recovery
+produce the gain. That is small-sample variance — a few lucky large bets — not predictive
+skill. Directional accuracy stays below 0.5 for **every** sentiment variant.
+
+**Verdict unchanged.** Neither VADER nor a finance-tuned LLM (nor their fusion) gives a
+robust directional edge on next-day BTC returns here. The higher headline number from the
+LLM fusion is exactly the kind of result the honest harness exists to catch — impressive
+cumulative return, no underlying skill.
+"""
 
 
 def _report_markdown(cfg, split, order, tbl, granger, price_da, sent_da,

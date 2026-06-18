@@ -26,6 +26,21 @@ FEATURE_COLUMNS = PRICE_FEATURES + SENTIMENT_FEATURES
 TARGET = "target_logret_fwd"
 
 
+def combine_vader_llm(
+    vader: pd.Series, llm_signed: pd.Series, llm_conf: pd.Series
+) -> pd.Series:
+    """Confidence-weighted fusion of VADER and LLM per-post sentiment (Phase 7).
+
+        combined = conf * llm_signed + (1 - conf) * vader
+
+    The LLM's max class probability (conf ∈ [~1/3, 1]) is its weight: a confident
+    LLM call dominates, an unsure one defers to VADER. Both inputs are signed
+    scores in [-1, +1], so the result stays in range.
+    """
+    c = llm_conf.clip(0.0, 1.0)
+    return (c * llm_signed + (1.0 - c) * vader).rename("compound")
+
+
 # --------------------------------------------------------------------------- #
 # Branch B — VADER sentiment per post, then influence-weighted daily aggregate
 # --------------------------------------------------------------------------- #

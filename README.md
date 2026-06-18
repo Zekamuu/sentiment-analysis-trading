@@ -66,4 +66,4 @@ notebooks/  results/
 - [x] **Phase 4** — price-only ARIMA(2,0,2) control (`check_phase4.py`): test slice is a BTC downtrend; model +5.2% cumulative (vs −27% B&H, −36% always-buy, −43% random) but directional acc 0.43 (below chance) — the small positive is a few large shorts, not skill
 - [x] **Phase 5** — sentiment ARIMAX vs control (`check_phase5.py`): **sentiment does NOT beat price-only** (−20.6% vs +5.2%, dir acc 0.41 vs 0.43). Clean null — sentiment adds noise, consistent with the Phase 3 Granger result
 - [x] **Phase 6** — analysis & writeup (`make_report.py` → [REPORT.md](REPORT.md) + cumulative-return figure): PnL chart, metrics table, Granger result, limitations, honest null conclusion
-- [ ] Phase 7 — stretch goals
+- [~] **Phase 7** — LLM branch done (`check_phase7.py`): CryptoBERT scored via MPS, confidence-weighted fusion with VADER. Combined model posts +9% but at directional acc 0.41 (below chance) on 17 trades — small-sample variance, **not skill**; verdict unchanged. Remaining stretch: GARCH filter, short side, second asset

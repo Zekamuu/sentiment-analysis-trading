@@ -100,3 +100,40 @@ short-horizon BTC return forecasting over price history alone**, and degraded it
 this test slice. The price-only control showed no genuine directional skill either.
 The value of this project is the **correct, leak-free, baseline-anchored methodology**
 and a clearly-reported null — exactly the defensible outcome the design anticipated.
+
+
+---
+
+## Phase 7 (stretch) — LLM sentiment branch (CryptoBERT) fused with VADER
+
+We added the optional LLM branch: tokenize each post and score it with **CryptoBERT**
+(a crypto-social-media-tuned transformer), then fuse it with VADER by a
+**confidence-weighted** rule — `combined = conf·LLM + (1−conf)·VADER`, so confident
+LLM calls dominate and unsure ones defer to VADER. The fused score replaces the
+per-post sentiment; everything else (ARIMA order, threshold tuning, backtest) is
+unchanged from Phase 5.
+
+![Phase 7 cumulative net return](results/phase7_cumulative.png)
+
+| strategy | n_trades | avg_net_return | hit_rate | cumulative_net_return | directional_acc |
+|---|---|---|---|---|---|
+| combined_VADER+LLM | 17 | 0.0058 | 0.412 | 0.0903 | 0.412 |
+| vader_only | 51 | -0.00395 | 0.373 | -0.2059 | 0.412 |
+| price_only | 35 | 0.00221 | 0.429 | 0.0519 | 0.429 |
+| buy_and_hold | 1 | -0.2728 | 0 | -0.2728 | nan |
+| always_buy | 112 | -0.00351 | 0.402 | -0.3559 | nan |
+| random | 112 | -0.00464 | 0.42 | -0.4335 | nan |
+
+**This does NOT show the LLM "working".** The combined model posts the highest
+cumulative return (+9.0%), beating VADER-only
+(-20.6%) and price-only (+5.2%) —
+but its **directional accuracy is 0.412, below a coin flip**, and it
+makes only **17 trades**. The chart shows why: it sits flat (no-trade) for
+most of the window, then a couple of large trades during the early-February crash/recovery
+produce the gain. That is small-sample variance — a few lucky large bets — not predictive
+skill. Directional accuracy stays below 0.5 for **every** sentiment variant.
+
+**Verdict unchanged.** Neither VADER nor a finance-tuned LLM (nor their fusion) gives a
+robust directional edge on next-day BTC returns here. The higher headline number from the
+LLM fusion is exactly the kind of result the honest harness exists to catch — impressive
+cumulative return, no underlying skill.
