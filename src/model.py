@@ -55,47 +55,43 @@ def select_order(
 
 
 def one_step_forecasts(
-    returns: pd.Series,
+    endog: pd.Series,
     n_train: int,
     order: tuple[int, int, int],
     exog: pd.DataFrame | None = None,
 ) -> pd.Series:
-    """Roll one-step-ahead forecasts of r_{t+1} for every decision bar t.
+    """Roll one-step-ahead forecasts for every decision bar t.
 
-    Params are estimated on returns[:n_train] (+ exog) ONLY. Returns a Series indexed
-    like `returns` whose value at bar t is the forecast of the next bar's return
-    (the quantity the decision rule acts on). The last bar's forecast is a genuine
-    out-of-sample step beyond the data.
+    `endog` is the TARGET series (r_{t+1} indexed by decision bar t); `exog`, if
+    given, is the contemporaneous feature row (sent_t), known at decision time t.
+    The one-step-ahead prediction of endog[t] uses endog[:t] (actuals through t-1)
+    plus exog[t] — all available at the close of bar t, so it is leak-free.
+
+    Params are estimated on the first `n_train` observations ONLY; test actuals are
+    filtered in via append(refit=False) without re-estimating. Returns a Series
+    indexed like `endog` whose value at bar t is the forecast of r_{t+1}.
     """
-    n = len(returns)
     d = order[1]
     trend = "c" if d == 0 else "n"
-    orig_index = returns.index
+    orig_index = endog.index
     # Work on a positional index so SARIMAX.append doesn't choke on a tz-aware
     # DatetimeIndex that carries no frequency.
-    r = returns.reset_index(drop=True)
+    y = endog.reset_index(drop=True)
     ex = exog.reset_index(drop=True) if exog is not None else None
     ex_train = ex.iloc[:n_train] if ex is not None else None
 
-    res = SARIMAX(r.iloc[:n_train], exog=ex_train, order=order, trend=trend,
+    res = SARIMAX(y.iloc[:n_train], exog=ex_train, order=order, trend=trend,
                   enforce_stationarity=False, enforce_invertibility=False).fit(disp=False)
     if ex is not None:
-        res = res.append(r.iloc[n_train:], exog=ex.iloc[n_train:], refit=False)
+        res = res.append(y.iloc[n_train:], exog=ex.iloc[n_train:], refit=False)
     else:
-        res = res.append(r.iloc[n_train:], refit=False)
+        res = res.append(y.iloc[n_train:], refit=False)
 
-    # In-sample one-step-ahead predictions for positions 1..n-1 (each uses actuals
-    # through the prior bar), then one out-of-sample step for the final bar.
-    insample = res.get_prediction(start=1, dynamic=False).predicted_mean.to_numpy()
-    if ex is not None:
-        oos = float(res.forecast(steps=1, exog=ex.iloc[[-1]]).iloc[0])
-    else:
-        oos = float(res.forecast(steps=1).iloc[0])
-
-    dec = np.empty(n)
-    dec[: n - 1] = insample          # forecast of r_{t+1} for bars 0..n-2
-    dec[n - 1] = oos                 # final bar: out-of-sample one-step
-    return pd.Series(dec, index=orig_index, name="forecast")
+    # One-step-ahead prediction for every position (each uses actuals through the
+    # prior bar and the contemporaneous exog row). No out-of-sample tail step is
+    # needed: endog[t] already IS r_{t+1}.
+    pred = res.get_prediction(start=0, dynamic=False).predicted_mean
+    return pd.Series(np.asarray(pred, dtype=float), index=orig_index, name="forecast")
 
 
 def decision_rule(forecasts: pd.Series, threshold: float) -> pd.Series:

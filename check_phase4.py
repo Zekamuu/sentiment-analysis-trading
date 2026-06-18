@@ -34,16 +34,16 @@ def main() -> int:
     table = pd.read_parquet(cfg["data"]["processed_path"])
     close = load_ohlcv(cfg["data"]["ohlcv_path"])["close"]
 
-    returns = table["px_ret"]
+    endog = table[TARGET]  # r_{t+1} indexed by decision bar t
     split = chronological_split(table.index, cfg["split"]["train_frac"])
     n_train = len(split.train_index)
-    print(f"Returns series: {len(returns)} bars | train {n_train} / test {len(split.test_index)} "
+    print(f"Target series: {len(endog)} bars | train {n_train} / test {len(split.test_index)} "
           f"| cutoff {split.cutoff.date()} | N={N}, cost={cost}")
 
     # --- Fit + chronological one-step forecasts (params from train only) -------
-    order = select_order(returns.iloc[:n_train])
+    order = select_order(endog.iloc[:n_train])
     print(f"Selected ARIMA order (p,d,q) = {order} by AIC on train returns")
-    forecasts = one_step_forecasts(returns, n_train, order)
+    forecasts = one_step_forecasts(endog, n_train, order)
 
     # --- Tune threshold on TRAIN, apply to TEST ------------------------------
     train_prices = close.loc[split.train_index]            # no buffer => no test price used
