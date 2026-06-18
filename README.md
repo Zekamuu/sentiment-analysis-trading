@@ -7,6 +7,10 @@ and build pathway for the *what/why* and *how/in-what-order*.
 **Two non-negotiables:** the target is a **return** (never a price level), and the
 evaluation is **leak-free and out-of-sample**.
 
+Project pipeline:
+<img width="1225" height="515" alt="Screenshot 2026-06-18 at 12 07 03 PM" src="https://github.com/user-attachments/assets/e1457680-788f-4b9f-a6da-d72369daa378" />
+
+
 ## Locked decisions (Phase 0)
 
 | Parameter | Value |
