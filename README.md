@@ -62,7 +62,7 @@ notebooks/  results/
 - [x] **Phase 0** — env, config, data loaders, repo structure
 - [x] **Phase 1** — chronological split, leak-free scaler, backtest + baselines; random signal break-even after costs (`check_phase1.py`)
 - [x] **Phase 2** — modeling table on the dense 2025-03→2026-03 tweet block (362 bars, 55% daily coverage, sentiment forward-filled over gaps; `prepare_tweets.py` → `build_features.py`)
-- [ ] Phase 3 — pre-build validation gate (target, leak-free, ADF, Granger)
+- [x] **Phase 3** — validation gate (`check_phase3.py`): target-is-return ✓, leak-free split ✓, ADF all stationary; Granger = **no significant sentiment lead** (honest null expectation)
 - [ ] Phase 4 — price-only ARIMAX (control)
 - [ ] Phase 5 — add sentiment, compare
 - [ ] Phase 6 — analysis & writeup
