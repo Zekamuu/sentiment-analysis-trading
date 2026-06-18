@@ -16,6 +16,8 @@ Merged_Twitter_Data_IDsRemoved.csv
 # Results artifacts are regenerable; keep the folder, ignore contents
 results/*
 !results/.gitkeep
+# Keep the final report figure so REPORT.md renders on GitHub.
+!results/cumulative_returns.png
 
 # Notebooks checkpoints
 .ipynb_checkpoints/
