@@ -63,7 +63,7 @@ notebooks/  results/
 - [x] **Phase 1** — chronological split, leak-free scaler, backtest + baselines; random signal break-even after costs (`check_phase1.py`)
 - [x] **Phase 2** — modeling table on the dense 2025-03→2026-03 tweet block (362 bars, 55% daily coverage, sentiment forward-filled over gaps; `prepare_tweets.py` → `build_features.py`)
 - [x] **Phase 3** — validation gate (`check_phase3.py`): target-is-return ✓, leak-free split ✓, ADF all stationary; Granger = **no significant sentiment lead** (honest null expectation)
-- [ ] Phase 4 — price-only ARIMAX (control)
+- [x] **Phase 4** — price-only ARIMA(1,0,0) control (`check_phase4.py`): test slice is a BTC downtrend; model −25% cumulative (vs −27% B&H, −36% always-buy, −43% random), directional acc 0.46 — edge is exposure-reduction, not skill
 - [ ] Phase 5 — add sentiment, compare
 - [ ] Phase 6 — analysis & writeup
 - [ ] Phase 7 — stretch goals
