@@ -44,7 +44,11 @@ def load_tweets(
     'followers' is optional — if absent, influence weighting falls back to a
     plain mean (see features.aggregate_sentiment_daily).
     """
-    df = pd.read_csv(path, encoding=encoding, on_bad_lines="skip")
+    path = Path(path)
+    if path.suffix == ".parquet":
+        df = pd.read_parquet(path)
+    else:
+        df = pd.read_csv(path, encoding=encoding, on_bad_lines="skip")
     columns = columns or {}
 
     text_col = columns.get("text") or _pick(list(df.columns), _TWEET_ALIASES["text"])

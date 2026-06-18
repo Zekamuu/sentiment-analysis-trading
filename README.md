@@ -28,13 +28,17 @@ uv run python check_phase0.py # verify the Phase 0 checkpoint
 
 ## Data
 
-- Tweets: `Merged_Twitter_Data_IDsRemoved.csv` (already present, 2022-06-08 → 2023-05-28).
-- BTC daily OHLCV: **you supply** `data/raw/btc_ohlcv_daily.csv` — see
-  [DATA_REQUIREMENTS.md](DATA_REQUIREMENTS.md).
+- Tweets: `data/raw/bitcoin_tweets_latest.csv` (~2 GB, ~4.8M tweets, dense over
+  2025-03 → 2026-03). Sampled to ≤3k/day and windowed by [prepare_tweets.py](prepare_tweets.py).
+- BTC daily OHLCV: `data/raw/btc_ohlcv_daily.csv` — see [DATA_REQUIREMENTS.md](DATA_REQUIREMENTS.md).
 
-> Data source actually used: BTC 1-minute OHLCV (epoch-seconds `Timestamp`, 2012-01-01 → 2026-06-17),
-> resampled to 5,282 daily bars by [prepare_ohlcv.py](prepare_ohlcv.py). Raw minute file kept at
-> `data/raw/btc_ohlcv_minute.csv`; modeling uses the 2022-06-08 → 2023-05-28 overlap with the tweets.
+> Data sources actually used:
+> - **OHLCV**: BTC 1-minute (epoch-seconds, 2012 → 2026-06-17), resampled to 5,282 daily
+>   bars by [prepare_ohlcv.py](prepare_ohlcv.py). (`BTC1D.csv` ends 2021 and does NOT overlap
+>   the tweet window, so it is unused.)
+> - **Tweets**: a dense Bitcoin-tweets crawl; modeling window **2025-03-06 → 2026-03-02**
+>   (362 daily bars, 55% have tweets, remainder forward-filled).
+> Raw data lives under `data/` and is gitignored — only code + docs are committed.
 
 ## Layout
 
@@ -57,7 +61,7 @@ notebooks/  results/
 
 - [x] **Phase 0** — env, config, data loaders, repo structure
 - [x] **Phase 1** — chronological split, leak-free scaler, backtest + baselines; random signal break-even after costs (`check_phase1.py`)
-- [~] **Phase 2** — feature pipeline built & checkpoint passes (`build_features.py`); rebuilding on a **denser tweets dataset** (current set covers only 10% of days) before locking — see [DATA_REQUIREMENTS.md](DATA_REQUIREMENTS.md)
+- [x] **Phase 2** — modeling table on the dense 2025-03→2026-03 tweet block (362 bars, 55% daily coverage, sentiment forward-filled over gaps; `prepare_tweets.py` → `build_features.py`)
 - [ ] Phase 3 — pre-build validation gate (target, leak-free, ADF, Granger)
 - [ ] Phase 4 — price-only ARIMAX (control)
 - [ ] Phase 5 — add sentiment, compare

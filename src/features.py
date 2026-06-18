@@ -43,7 +43,10 @@ def score_tweets_vader(tweets: pd.DataFrame, text_col: str = "text") -> pd.Serie
 
 
 def aggregate_sentiment_daily(
-    tweets: pd.DataFrame, bar_index: pd.DatetimeIndex
+    tweets: pd.DataFrame,
+    bar_index: pd.DatetimeIndex,
+    empty_bar: str = "zero",
+    true_counts: pd.Series | None = None,
 ) -> pd.DataFrame:
     """Collapse per-post scores into daily bar features, influence-weighted.
 
@@ -52,8 +55,11 @@ def aggregate_sentiment_daily(
       - sent_postvol: log(1 + post count)  (chatter volume is itself predictive)
       - sent_disp   : dispersion (std) of compound within the bar
 
-    Empty bars (no posts) are filled with zeros — "no chatter" => neutral signal,
-    zero volume, zero dispersion (Design §4.7; an explicit, documented choice).
+    Empty-bar (no-tweet day) policy (Design §4.7):
+      - "zero"  : neutral signal, zero volume/dispersion.
+      - "ffill" : hold the most recent sentiment across the gap, then zero-fill any
+                  leading bars before the first observation. Leak-free (only past
+                  readings are carried forward) — used when coverage is gappy.
     """
     df = tweets.copy()
     if "compound" not in df.columns:
@@ -71,14 +77,27 @@ def aggregate_sentiment_daily(
     # If every weight in a bar is 0 (e.g. all followers 0/NA), fall back to plain mean.
     wmean = wmean.fillna(grouped["compound"].mean())
 
+    # Post volume: prefer the TRUE per-day counts (the sample is capped and would
+    # saturate this feature); fall back to the sampled count when unavailable.
+    if true_counts is not None:
+        postvol = np.log1p(true_counts.reindex(grouped.size().index).fillna(grouped.size()))
+    else:
+        postvol = np.log1p(grouped.size())
+
     daily = pd.DataFrame({
         "sent_wmean": wmean,
-        "sent_postvol": np.log1p(grouped.size()),
+        "sent_postvol": postvol,
         "sent_disp": grouped["compound"].std(ddof=0),
     })
 
-    # Reindex onto the price bar grid and fill empty bars explicitly with zeros.
-    daily = daily.reindex(bar_index).fillna(0.0)
+    # Reindex onto the price bar grid and fill empty bars per the chosen policy.
+    daily = daily.reindex(bar_index)
+    if empty_bar == "ffill":
+        daily = daily.ffill().fillna(0.0)  # hold last reading; zero any leading gap
+    elif empty_bar == "zero":
+        daily = daily.fillna(0.0)
+    else:
+        raise ValueError(f"empty_bar must be 'zero' or 'ffill', got {empty_bar!r}")
     daily.index.name = "date"
     return daily
 
@@ -127,6 +146,8 @@ def build_modeling_table(
     ohlcv: pd.DataFrame,
     window: tuple[str, str],
     vol_window: int = 5,
+    empty_bar: str = "zero",
+    true_counts: pd.Series | None = None,
 ) -> pd.DataFrame:
     """Join sentiment + price features and the target onto one daily index.
 
@@ -141,7 +162,8 @@ def build_modeling_table(
     target = make_target(ohlcv).loc[start:end]
 
     # Sentiment aggregated onto the same daily grid as the price window.
-    sent = aggregate_sentiment_daily(tweets, px.index)
+    sent = aggregate_sentiment_daily(tweets, px.index, empty_bar=empty_bar,
+                                     true_counts=true_counts)
 
     table = pd.concat([px, sent, target], axis=1)
     table = table[FEATURE_COLUMNS + [TARGET]].dropna()

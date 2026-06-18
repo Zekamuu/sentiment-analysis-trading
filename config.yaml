@@ -20,10 +20,26 @@ timezone: "UTC"
 
 # --- Data paths ---
 data:
-  tweets_path: "Merged_Twitter_Data_IDsRemoved.csv"  # raw tweets (text, date, followers, engagement)
-  tweets_encoding: "latin-1"                          # file is not clean UTF-8
-  # Optional: override auto-detected column names for a new tweets dataset, e.g.
-  # tweets_columns: {text: "Tweet", date: "created_at", followers: "user_followers"}
+  # Raw tweets dump (large, unsorted). Sampled+windowed by prepare_tweets.py.
+  tweets_raw_path: "data/raw/bitcoin_tweets_latest.csv"
+  tweets_encoding: "utf-8"
+  tweets_sample_per_day: 3000   # reservoir sample/day for tractable VADER scoring
+  # Optional: override auto-detected column names, e.g.
+  # tweets_columns: {text: "text", date: "date", followers: "user_followers"}
   tweets_columns: null
-  ohlcv_path: "data/raw/btc_ohlcv_daily.csv"          # YOU PROVIDE — see DATA_REQUIREMENTS.md
+  # Small windowed+sampled tweets file that build_features.py consumes.
+  tweets_path: "data/processed/tweets_window.parquet"
+  # NOTE: BTC1D.csv ends 2021-03 and does NOT overlap the 2025-26 tweet window.
+  # btc_ohlcv_daily.csv (2012->2026, resampled from minute) is the one that covers it.
+  ohlcv_path: "data/raw/btc_ohlcv_daily.csv"
   processed_path: "data/processed/modeling_table.parquet"  # built in Phase 2
+
+# Modeling window — the dense tweet block that overlaps our OHLCV (Phase 2).
+modeling_window:
+  start: "2025-03-06"
+  end: "2026-03-02"
+
+# Empty-bar (no-tweet day) policy for sentiment features (Design §4.7):
+#   "ffill" = hold the most recent sentiment across the gap (leak-free, our choice)
+#   "zero"  = treat as neutral / no chatter
+empty_bar: "ffill"

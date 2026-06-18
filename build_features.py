@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
 from src.config import load_config
 from src.data import load_ohlcv, load_tweets
@@ -25,14 +26,13 @@ from src.features import (
 )
 
 OK, FAIL = "[ OK ]", "[FAIL]"
-WINDOW = ("2022-06-08", "2023-05-28")  # tweet coverage
 
 
 def main() -> int:
     cfg = load_config()
     failures = 0
 
-    print("Loading tweets + OHLCV and scoring sentiment (VADER over ~107k posts)...")
+    print("Loading windowed tweets + OHLCV and scoring sentiment with VADER...")
     tweets = load_tweets(
         cfg["data"]["tweets_path"],
         cfg["data"].get("tweets_encoding", "latin-1"),
@@ -40,7 +40,19 @@ def main() -> int:
     )
     ohlcv = load_ohlcv(cfg["data"]["ohlcv_path"])
 
-    table = build_modeling_table(tweets, ohlcv, WINDOW)
+    window = (cfg["modeling_window"]["start"], cfg["modeling_window"]["end"])
+    empty_bar = cfg.get("empty_bar", "zero")
+
+    # True daily tweet counts (sidecar from prepare_tweets) for an unsaturated
+    # post-volume feature; optional, falls back to sampled counts if absent.
+    counts_path = Path(cfg["data"]["tweets_path"]).with_name("tweet_true_counts.parquet")
+    true_counts = None
+    if counts_path.exists():
+        true_counts = pd.read_parquet(counts_path)["true_count"]
+
+    table = build_modeling_table(tweets, ohlcv, window, empty_bar=empty_bar,
+                                 true_counts=true_counts)
+    print(f"Window {window[0]} -> {window[1]}, empty-bar policy = {empty_bar!r}")
     print(f"Modeling table: {table.shape[0]} rows x {table.shape[1]} cols, "
           f"{table.index.min().date()} -> {table.index.max().date()}")
     print(f"  price features    : {PRICE_FEATURES}")
